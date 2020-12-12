@@ -1,3 +1,3 @@
-module query_builder
+module github.com/ameyhinge/query_builder
 
 go 1.15
