@@ -1,21 +1,32 @@
 package querybuilder
 
 import (
-	"fmt"
+	"database/sql"
+	"errors"
 	"reflect"
 )
 
-func Hello() {
-	fmt.Println("Hello, World!")
-}
+// ScanStruct converts sql row.Scan into passed struct
+func ScanStruct(str interface{}, r *sql.Rows) error {
 
-type Employee struct {
-	id   int
-	name string
-}
+	// Get the underlying element from passed interface
+	v := reflect.ValueOf(str).Elem()
 
-func parseStruct(emp Employee) {
-	for i := 0; i < reflect.ValueOf(emp).NumField(); i++ {
-		fmt.Println(reflect.ValueOf(emp).Field(i))
+	// Check if passed interface is pointer to struct
+	if v.Kind() != reflect.Struct {
+		return errors.New("Passed interface is not a pointer to struct")
 	}
+
+	// Make slice to hold fields of structs
+	fields := make([]interface{}, v.NumField())
+	for kk := 0; kk < v.NumField(); kk++ {
+		fields[kk] = v.Field(kk).Addr().Interface()
+	}
+
+	// Execute rows.Scan
+	err := r.Scan(fields...)
+	if err != nil {
+		return err
+	}
+	return nil
 }
